@@ -1,15 +1,21 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment: boolean = process.env.NODE_ENV === 'development';
 
-const levels = {
-  error: 0,
-  info: 1,
+const syslogColors = {
+  debug: 'rainbow',
+  info: 'cyan',
+  notice: 'white',
+  warning: 'yellow',
+  error: 'bold red',
+  crit: 'inverse yellow',
+  alert: 'bold inverse red',
+  emerg: 'bold inverse magenta',
 };
 
 const logger = winston.createLogger({
-  levels,
+  levels: winston.config.syslog.levels,
   format: winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.printf(
@@ -25,7 +31,13 @@ const logger = winston.createLogger({
       maxFiles: '7d',
       level: 'error',
     }),
-    isDevelopment ? new winston.transports.Console() : null,
+    isDevelopment
+      ? new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize({ all: true, colors: syslogColors })
+          ),
+        })
+      : null,
   ].filter(Boolean),
 });
 
